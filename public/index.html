@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id='name'>
+    <button id='setName'>设置</button>
+    <input type='text' id='text'>
+    <button id='btn' type='button'>发送</button>
+    <div id="container">
+    </div>
+    <script>
+        var ws = null;
+        document.getElementById("setName").onclick = function () {
+            var name = document.getElementById("name").value;
+            if (name == '') return console.log("名字已存在");
+            ws = new WebSocket('ws://localhost:8888');
+            //建立连接时监听
+            ws.onopen = function () {
+                ws.send(JSON.stringify({ name: name, type: 'setName' }));
+                // ws.send('来自客户端消息');
+            }
+            document.getElementById("btn").onclick = send;
+            document.getElementById("text").onkeyup = function(e){
+               if(e.keyCode !== 13) return;
+               send();
+            }
+            // 客户端接收服务端信息
+            ws.onmessage = function (e) {
+                var con = document.getElementById('container');
+                con.insertBefore(createChatPanel(JSON.parse(e.data)),con.children[0]);
+            }
+            document.getElementById('setName').setAttribute('disabled',true);
+        }
+        function createChatPanel(data){
+            var name = data.name;
+            var text = data.text;
+            var div = document.createElement('div');
+            var span1 = document.createElement('span');
+            var span2 = document.createElement('span');
+            span1.style.color="#00f";
+            span1.style.fontWeight="700";
+            span1.innerHTML = name + '' + (new Date()).toString();
+            span2.innerHTML = text;
+            div.appendChild(span1);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(span2);
+            return div;
+        }
+        function send(){
+            var text = document.getElementById('text').value;
+            if(text === '') return false;
+            ws.send(JSON.stringify({ text: document.getElementById('text').value, type: 'chat' }));
+        }
+    </script>
+</body>
+
+</html>
